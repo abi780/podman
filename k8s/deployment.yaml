@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
       - name: flask-test1
-        image: 192.168.20.103:5000/flask-demo:27
+        image: 192.168.20.103:5000/flask-demo:28
         ports:
         - containerPort: 5000
