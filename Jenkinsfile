@@ -15,7 +15,7 @@ pipeline {
                 checkout([$class: 'GitSCM', 
                           branches: [[name: '*/main']], 
                           userRemoteConfigs: [[
-                              url: 'git@github.com:abi780/August.git',
+                              url: 'git@github.com:abi780/podman.git',
                               credentialsId: 'github-ssh'
                           ]]
                 ])
