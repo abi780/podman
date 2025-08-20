@@ -81,7 +81,6 @@ pipeline {
                     mkdir -p ~/.kube
                     cp $KUBECONFIG_CREDENTIALS ~/.kube/config
                     kubectl create namespace podman-cicd --dry-run=client -o yaml | kubectl apply -f -
-                    
                     kubectl apply -f k8s/
                     kubectl rollout status deployment/flask-test1 -n podman-cicd
                     """
