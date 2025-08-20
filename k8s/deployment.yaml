@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-test1
+  namespace: podman-cicd
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: flask-test1
+  template:
+    metadata:
+      labels:
+        app: flask-test1
+    spec:
+      containers:
+      - name: flask-test1
+        image: 192.168.20.103:5000/flask-demo:45
+        ports:
+        - containerPort: 5000
