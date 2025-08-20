@@ -22,7 +22,7 @@ pipeline {
             }
         }
 
-        stage('Commit & Push Changes') {
+        stage('Commit & Push Changes before') {
             steps {
                 script {
                     sh """
@@ -69,7 +69,7 @@ pipeline {
             }
         }
 
-        stage('Commit & Push Changes') {
+        stage('Commit & Push Changes after') {
             steps {
                 script {
                     sh """
