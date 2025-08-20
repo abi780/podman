@@ -1,0 +1,92 @@
+pipeline {
+    agent any
+    options {
+        skipDefaultCheckout(true)
+    }
+    environment {
+        
+        DOCKER_IMAGE = "192.168.20.103:5000/flask-demo"
+        KUBECONFIG_CREDENTIALS = credentials('kubeconfig-demo')
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkout([$class: 'GitSCM', 
+                          branches: [[name: '*/main']], 
+                          userRemoteConfigs: [[
+                              url: 'git@github.com:abi780/August.git',
+                              credentialsId: 'github-ssh'
+                          ]]
+                ])
+                 sh 'git checkout main'
+            }
+        }
+
+        stage('Build & Push Docker Image') {
+            steps {
+                script {
+                    sh """
+                    
+                    docker build -t $DOCKER_IMAGE:${BUILD_NUMBER} .
+                    docker push $DOCKER_IMAGE:${BUILD_NUMBER}
+                    docker tag $DOCKER_IMAGE:${BUILD_NUMBER} $DOCKER_IMAGE:latest
+                    docker push $DOCKER_IMAGE:latest
+                    """
+                }
+            }
+        }
+
+        stage('Push to Podman Registry') {
+            steps {
+                script {
+                    sh 'docker push $DOCKER_IMAGE:$BUILD_NUMBER'
+                }
+            }
+        }
+
+        stage('Update Deployment YAML') {
+            steps {
+                script {
+                    sh """
+                    sed -i 's|image: ${DOCKER_IMAGE}:.*|image: ${DOCKER_IMAGE}:${BUILD_NUMBER}|' k8s/deployment.yaml
+                    """
+                }
+            }
+        }
+
+        stage('Commit & Push Changes') {
+            steps {
+                script {
+                    sh """
+                    git config user.email "ci-bot@myorg.com"
+                    git config user.name "CI Bot"
+                    git add k8s/deployment.yaml
+                    git commit -m "Update image to ${DOCKER_IMAGE}:${BUILD_NUMBER}" || echo "No changes to commit"
+                    git fetch origin main
+                    git rebase origin/main || true
+
+                    # Now push the rebased commit
+                    git push origin main 
+
+                    """
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    sh """
+                    mkdir -p ~/.kube
+                    cp $KUBECONFIG_CREDENTIALS ~/.kube/config
+                    kubectl create namespace podman-cicd --dry-run=client -o yaml | kubectl apply -f -
+                    sh "sed -i 's|image:.*|image: $DOCKER_IMAGE:$BUILD_NUMBER|' k8s/deployment.yaml"
+                    kubectl apply -f k8s/
+                    kubectl rollout status deployment/flask-demo -n podman-cicd
+                    """
+                }
+            }
+        }
+    }
+}
