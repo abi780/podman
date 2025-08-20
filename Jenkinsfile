@@ -4,7 +4,6 @@ pipeline {
         skipDefaultCheckout(true)
     }
     environment {
-        
         DOCKER_IMAGE = "192.168.20.103:5000/flask-demo"
         KUBECONFIG_CREDENTIALS = credentials('kubeconfig-demo')
     }
@@ -19,10 +18,10 @@ pipeline {
                               credentialsId: 'github-ssh'
                           ]]
                 ])
-                 sh 'git checkout main'
+                sh 'git checkout main'
             }
         }
-    }
+
         stage('Commit & Push Changes') {
             steps {
                 script {
@@ -33,10 +32,7 @@ pipeline {
                     git commit -m "Update image to ${DOCKER_IMAGE}:${BUILD_NUMBER}" || echo "No changes to commit"
                     git fetch origin main
                     git rebase origin/main || true
-
-                    # Now push the rebased commit
                     git push origin main 
-
                     """
                 }
             }
@@ -46,7 +42,6 @@ pipeline {
             steps {
                 script {
                     sh """
-                    
                     docker build -t $DOCKER_IMAGE:${BUILD_NUMBER} .
                     docker push $DOCKER_IMAGE:${BUILD_NUMBER}
                     docker tag $DOCKER_IMAGE:${BUILD_NUMBER} $DOCKER_IMAGE:latest
@@ -84,10 +79,7 @@ pipeline {
                     git commit -m "Update image to ${DOCKER_IMAGE}:${BUILD_NUMBER}" || echo "No changes to commit"
                     git fetch origin main
                     git rebase origin/main || true
-
-                    # Now push the rebased commit
                     git push origin main 
-
                     """
                 }
             }
