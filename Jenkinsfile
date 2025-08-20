@@ -22,6 +22,7 @@ pipeline {
                  sh 'git checkout main'
             }
         }
+    }
         stage('Commit & Push Changes') {
             steps {
                 script {
