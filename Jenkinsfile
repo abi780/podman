@@ -68,7 +68,21 @@ pipeline {
                 }
             }
         }
-
+        stage('Commit & Push Changes after') {
+            steps {
+                script {
+                    sh """
+                    git config user.email "ci-bot@myorg.com"
+                    git config user.name "CI Bot"
+                    git add k8s/deployment.yaml
+                    git commit -m "Update image to ${DOCKER_IMAGE}:${BUILD_NUMBER}" || echo "No changes to commit"
+                    git fetch origin main
+                    git rebase origin/main || true
+                    git push origin main 
+                    """
+                }
+            }
+        }
         
         stage('Deploy to Kubernetes') {
             steps {
